@@ -70,8 +70,46 @@ def run_logs2html(channel, dir_name):
         subprocess.check_call(cmd, shell=True, stderr=sys.stdout.fileno())
 
 
+def redirection_page(filename, link):
+    """ Generates an html page redirecting to the specified link """
+
+    # Check if an existing file redirects to same link
+    regex = re.compile(link)
+    try:
+        with open(filename, 'r') as f:
+            for line in f:
+                if regex.search(line):
+                    return
+    except IOError:
+        pass
+
+    # Generate the file
+    print "\tGenerating redirection page %s" % filename
+    f = open(filename, 'w')
+    f.write('''<!DOCTYPE HTML>
+<html lang="en-US">
+    <head>
+         <meta charset="UTF-8">
+         <meta http-equiv="refresh" content="1;url={0}">
+         <script type="text/javascript">
+             window.location.href = "{0}"
+         </script>
+         <title>Page Redirection</title>
+    </head>
+    <body>
+            This page has moved.
+            If you are not redirected automatically,
+            follow the <a href="{0}">link</a>.
+    </body>
+</html>
+'''.format(link))
+    f.close()
+
+
 def convert_logs(source):
     """ Process source path, convert all logs to html """
+
+    filename = 'latest.log.html'
 
     # Building a list of channels to generate index page later
     channels = dict()
@@ -79,7 +117,6 @@ def convert_logs(source):
     # The directories in source are our logged channels
     for channel in os.walk(source).next()[1]:
         path_src_channel = path.join(source, channel)
-        channels[channel] = set()
 
         # Skip if channel not matching spec
         regex_channel = re.compile(regexstr_channel)
@@ -90,16 +127,27 @@ def convert_logs(source):
 
         # Check for presence of subdirectories
         dirlist = frozenset(os.walk(path_src_channel).next()[1])
+        year_list = []
         if dirlist:
             # Found some (directories.timestamp is True), process them
             for subdir in dirlist:
-                channels[channel].add(subdir)
+                year_list.append(subdir)
                 print "\t%s:" % subdir,
                 run_logs2html(channel, path.join(path_src_channel, subdir))
+            year_list.sort()
+            year_list.reverse()
+
+            # Create redirection page to latest log
+            redirection_page(
+                path.join(path_src_channel, filename),
+                year_list[0] + '/' + filename
+            )
         else:
             # Empty dirlist = no dir rotation setup, all files are here
             print "\t",
             run_logs2html(channel, path_src_channel)
+
+        channels[channel] = year_list
 
     print "html files generation completed"
     print
