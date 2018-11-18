@@ -1,5 +1,6 @@
 #!/usr/bin/python -u
 
+import errno
 import getopt
 import os
 from os import path
@@ -55,10 +56,29 @@ Options:
 ''' % path.basename(__file__)
 #end usage()
 
+def gpg_get_bin():
+    ''' Return the GnuPG binary, throws OSError if not found
+        Use gpg 2.x for compatibility with gpg-agent 2.x, with fallback to 1.x.
+    '''
+    if 'name' in gpg_get_bin.__dict__ and gpg_get_bin.name:
+        return gpg_get_bin.name
+
+    for binary in ('gpg2', 'gpg'):
+        try:
+            subprocess.check_output([binary, '--version']);
+        except OSError as e:
+            if e.errno != errno.ENOENT:
+                raise
+        else:
+            gpg_get_bin.name = binary
+            return gpg_get_bin.name
+
+    raise OSError(errno.ENOENT, 'GnuPG binary not found')
 
 def gpg_sign_tarball(filename):
     ''' Sign the file using GPG '''
-    gpgsign = "gpg -b -a %s" + path.abspath(path.join(os.curdir, filename))
+    gpgsign = gpg_get_bin()
+    gpgsign += " -b -a %s" + path.abspath(path.join(os.curdir, filename))
     try:
         subprocess.check_call(gpgsign % '--batch --yes ', shell=True)
     except subprocess.CalledProcessError:
@@ -217,6 +237,13 @@ def main():
     os.chdir(release_path)
     tarball_ext = ("tar.gz", "zip")
 
+    try:
+        gpg = gpg_get_bin()
+    except OSError as e:
+        print "  ERROR:", e
+        print "  Release tarballs will not be signed"
+        gpg = False
+
     for ext in tarball_ext:
         tarball = "%s.%s" % (release_name, ext)
         print "  " + tarball
@@ -229,8 +256,9 @@ def main():
 
         subprocess.call(tar_cmd % (tarball, release_name), shell=True)
 
-        print "    Signing the tarball"
-        gpg_sign_tarball(tarball)
+        if gpg:
+            print "    Signing the tarball"
+            gpg_sign_tarball(tarball)
 
         print "    Generating checksums..."
         generate_checksum(tarball)
