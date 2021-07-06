@@ -19,7 +19,7 @@ source_dir = '/home/supybot/mantisbot/logs/ChannelLogger'
 target_dir = '/srv/www/irclogs'
 
 # Regex for IRC logs archives to process
-regexstr_channel = '(?:mantis)'
+regexstr_channel = '^mantisbt$'
 
 # ---------------------------------------------------------------------
 
