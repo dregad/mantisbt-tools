@@ -13,13 +13,16 @@ import sys
 # ---------------------------------------------------------------------
 
 # Directory where ChannelLogger stores the raw IRC logs
-source_dir = '/home/supybot/mantisbot/logs/ChannelLogger'
+source_dir = '/tmp/irclogs'
 
 # Web server directory from which the html pages are served
 target_dir = '/srv/www/irclogs'
 
 # Regex for IRC logs archives to process
-regexstr_channel = '^mantisbt$'
+regexstr_channel = '^mantis'
+
+# Set to True to force logs generation (ignore last modified timestamp)
+force = True
 
 # ---------------------------------------------------------------------
 
@@ -107,7 +110,7 @@ def convert_logs(source, target):
             recent_log_ts = recent_log.stat().st_mtime
 
             # Skip if not modified since reference timestamp
-            if recent_log_ts < ref_time:
+            if not force and recent_log_ts < ref_time:
                 continue
 
             print("\t{}:".format(year.name), end=' ')
