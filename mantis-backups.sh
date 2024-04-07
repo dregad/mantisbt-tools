@@ -10,7 +10,7 @@
 #------------------------------------------------------------------------------
 
 # Space-separated list of databases to backup
-DATABASES="bugtracker"
+DATABASES="bugtracker adodb"
 
 # Target directory for DB dumps
 DUMPS_DIR=/tmp/backups
