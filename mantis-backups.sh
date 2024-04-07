@@ -31,7 +31,7 @@ DATE_FORMAT="%FT%T"
 COMPRESS=bzip2
 
 # Backup rotation strategy script
-GFS_SCRIPT=gfs.py
+GFS_SCRIPT=$(dirname $0)/gfs.py/gfs.py
 
 
 #------------------------------------------------------------------------------
