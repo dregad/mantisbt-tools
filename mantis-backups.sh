@@ -26,6 +26,10 @@ LOGFILE=/tmp/backups/$(basename $0 .sh).log
 # Date format for database dump files
 DATE_FORMAT="%FT%T"
 
+# Program to use to compress database dump files (gzip or bzip2)
+# Leave blank for no compression
+COMPRESS=bzip2
+
 
 #------------------------------------------------------------------------------
 # Helper functions
@@ -66,6 +70,11 @@ do
 	log "Dumping database '$DB'"
 	DUMP_FILENAME="$DUMPS_DIR/${DB}_$(date +"$DATE_FORMAT").sql"
 	$MYSQLDUMP $DB 2>&1 >"$DUMP_FILENAME" |tee -a "$LOGFILE"
+	if [ -n "$COMPRESS" ]
+	then
+		log "Compressing dump '$(basename "$DUMP_FILENAME")' with $COMPRESS"
+		$COMPRESS "$DUMP_FILENAME" 2>&1 |tee -a "$LOGFILE"
+	fi
 done
 
 # Backup to Tarsnap
