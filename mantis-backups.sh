@@ -23,15 +23,25 @@ MYSQLDUMP=/usr/bin/mysqldump
 # Log file - set to /dev/null for no log
 LOGFILE=/var/log/$(basename $0 .sh).log
 
+
+#------------------------------------------------------------------------------
+# Helper functions
+#
+
+function log() {
+	echo "$(date +'%F %T') $*" |tee -a "$LOGFILE"
+}
+
+
 #------------------------------------------------------------------------------
 # Main
 #
 
 # Start logging
-cat <<-EOF >>$LOGFILE
+cat <<-EOF >>"$LOGFILE"
 	------------------------------------------------------------------------
-	$(date +"%F %T") Starting mantisbt.org server backup
 EOF
+log "Starting mantisbt.org server backup"
 
 if [ ! -d $DUMPS_DIR ]
 then
@@ -40,20 +50,20 @@ fi
 # Dumping databases
 for DB in $DATABASES
 do
-	echo "$(date +'%F %T') Dumping database '$DB'" |tee -a $LOGFILE
-	$MYSQLDUMP $DB 2>&1 >$DUMPS_DIR/$DB.sql |tee -a $LOGFILE
+	log "Dumping database '$DB'"
+	$MYSQLDUMP $DB 2>&1 >$DUMPS_DIR/$DB.sql |tee -a "$LOGFILE"
 done
 
 # Backup to Tarsnap
-echo "$(date +'%F %T') Running Tarsnap" |tee -a $LOGFILE
-tarsnap -c -f mantisbt_org_`date +"%F-%H-%M"` --exclude /srv/www/wiki/data/cache --exclude /srv/mysql --cachedir /var/cache/tarsnap/ /srv/ /home/ 2>&1 |tee -a $LOGFILE
+log "Running Tarsnap"
+tarsnap -c -f mantisbt_org_`date +"%F-%H-%M"` --exclude /srv/www/wiki/data/cache --exclude /srv/mysql --cachedir /var/cache/tarsnap/ /srv/ /home/ 2>&1 |tee -a "$LOGFILE"
 
 # Delete old backups
 # Keeping daily for 30 days, then monthly for a year and yearly for 5 years
-echo "$(date +'%F %T') Removing old backups" |tee -a $LOGFILE
-tarsnapper --target "mantisbt_org_\$date" --deltas 1d 30d 360d 1800d --dateformat "%Y-%m-%d-%H-%M" - expire 2>>$LOGFILE
+log "Removing old backups"
+tarsnapper --target "mantisbt_org_\$date" --deltas 1d 30d 360d 1800d --dateformat "%Y-%m-%d-%H-%M" - expire 2>>"$LOGFILE"
 
 # All done
-echo "$(date +'%F %T') Backup complete" |tee -a $LOGFILE
+log "Backup complete"
 echo "Review logfile in $LOGFILE"
 
