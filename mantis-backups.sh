@@ -23,6 +23,9 @@ MYSQLDUMP=mysqldump
 # Log file - set to /dev/null for no log
 LOGFILE=/tmp/backups/$(basename $0 .sh).log
 
+# Date format for database dump files
+DATE_FORMAT="%FT%T"
+
 
 #------------------------------------------------------------------------------
 # Helper functions
@@ -56,11 +59,13 @@ if [ ! -d $DUMPS_DIR ]
 then
 	mkdir -p $DUMPS_DIR
 fi
+
 # Dumping databases
 for DB in $DATABASES
 do
 	log "Dumping database '$DB'"
-	$MYSQLDUMP $DB 2>&1 >$DUMPS_DIR/$DB.sql |tee -a "$LOGFILE"
+	DUMP_FILENAME="$DUMPS_DIR/${DB}_$(date +"$DATE_FORMAT").sql"
+	$MYSQLDUMP $DB 2>&1 >"$DUMP_FILENAME" |tee -a "$LOGFILE"
 done
 
 # Backup to Tarsnap
@@ -75,4 +80,3 @@ tarsnapper --target "mantisbt_org_\$date" --deltas 1d 30d 360d 1800d --dateforma
 # All done
 log "Backup complete"
 echo "Review logfile in $LOGFILE"
-
