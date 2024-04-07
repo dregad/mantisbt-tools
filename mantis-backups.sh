@@ -30,6 +30,9 @@ DATE_FORMAT="%FT%T"
 # Leave blank for no compression
 COMPRESS=bzip2
 
+# Backup rotation strategy script
+GFS_SCRIPT=gfs.py
+
 
 #------------------------------------------------------------------------------
 # Helper functions
@@ -77,14 +80,11 @@ do
 	fi
 done
 
-# Backup to Tarsnap
-log "Running Tarsnap"
-tarsnap -c -f mantisbt_org_`date +"%F-%H-%M"` --exclude /srv/www/wiki/data/cache --exclude /srv/mysql --cachedir /var/cache/tarsnap/ /srv/ /home/ 2>&1 |tee -a "$LOGFILE"
-
 # Delete old backups
+# Grandfather-father-son strategy - keep 7 daily, 4 weekly, 12 monthly,
 # Keeping daily for 30 days, then monthly for a year and yearly for 5 years
 log "Removing old backups"
-tarsnapper --target "mantisbt_org_\$date" --deltas 1d 30d 360d 1800d --dateformat "%Y-%m-%d-%H-%M" - expire 2>>"$LOGFILE"
+
 
 # All done
 log "Backup complete"
