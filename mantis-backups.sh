@@ -32,10 +32,19 @@ function log() {
 	echo "$(date +'%F %T') $*" |tee -a "$LOGFILE"
 }
 
+function abort() {
+  log "Aborting"
+  exit 1
+}
+
 
 #------------------------------------------------------------------------------
 # Main
 #
+
+# Error handling
+set -o pipefail
+trap abort ERR
 
 # Start logging
 cat <<-EOF >>"$LOGFILE"
