@@ -10,10 +10,10 @@
 #------------------------------------------------------------------------------
 
 # Space-separated list of databases to backup
-DATABASES="bugs forums blog"
+DATABASES="bugtracker"
 
 # Target directory for DB dumps
-DUMPS_DIR=/srv/backups/db
+DUMPS_DIR=/tmp/backups
 
 # Path to MySQL db dump tool
 # NOTE: we assume that the user running the script has setup MySQL credentials
@@ -21,7 +21,7 @@ DUMPS_DIR=/srv/backups/db
 MYSQLDUMP=/usr/bin/mysqldump
 
 # Log file - set to /dev/null for no log
-LOGFILE=/var/log/$(basename $0 .sh).log
+LOGFILE=/tmp/backups/$(basename $0 .sh).log
 
 
 #------------------------------------------------------------------------------
