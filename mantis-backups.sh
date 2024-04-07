@@ -15,10 +15,10 @@ DATABASES="bugtracker"
 # Target directory for DB dumps
 DUMPS_DIR=/tmp/backups
 
-# Path to MySQL db dump tool
+# MySQL db dump tool
 # NOTE: we assume that the user running the script has setup MySQL credentials
 # in .my.cnf file's [client] section
-MYSQLDUMP=/usr/bin/mysqldump
+MYSQLDUMP=mysqldump
 
 # Log file - set to /dev/null for no log
 LOGFILE=/tmp/backups/$(basename $0 .sh).log
