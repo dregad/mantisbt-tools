@@ -68,28 +68,40 @@ def retrieve_team_repos(team):
 
 def main():
     print("Connecting to Github")
-    gh = Github(cfg.github['token'])
+    token = cfg.github['token']
+    gh = Github(token)
 
     # For some reason, we need some dummy API call to ensure oauth_scopes
     # is populated https://github.com/PyGithub/PyGithub/issues/1943
     gh.get_rate_limit()
 
-    # Make sure we have the required privilege
-    required_privileges = ['admin:org']
-    has_required_privilege = False
-    if gh.oauth_scopes is not None:
-        for privilege in required_privileges:
-            if privilege in gh.oauth_scopes:
-                has_required_privilege = True
-                break
-    if not has_required_privilege:
-        print("""
-ERROR: This script requires a Classic Token with the 'admin:org' scope.
+    # Make sure the token has the required privilege
+    if token[0:4] == 'ghp_':
+        # It's a Classic personal access token
+        required_privileges = ['admin:org']
+        has_required_privilege = False
+        if gh.oauth_scopes is not None:
+            for privilege in required_privileges:
+                if privilege in gh.oauth_scopes:
+                    has_required_privilege = True
+                    break
 
-Please update the config.yml file and GitHub Token as appropriate
-https://github.com/settings/tokens
-""")
-        sys.exit(1)
+        if not has_required_privilege:
+            print("""
+        ERROR: This script requires a Classic Token with the 'admin:org' scope.
+
+        Please update the config.yml file and GitHub Token as appropriate
+        https://github.com/settings/tokens
+        """)
+            sys.exit(1)
+    else:
+        # It's a Fine-grained access token
+        # It is currently not possible to retrieve the privileges granted to
+        # a fine-grained token via the API
+        # https://github.com/orgs/community/discussions/73397
+        # So we just go ahead and may hit a Exception later
+        has_required_privilege = False
+        pass
 
     # Organization
     print("Retrieving organization '{0}'".format(config.ORG_PLUGINS))
